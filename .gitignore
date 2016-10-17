@@ -1,0 +1,9 @@
+/vendor
+/node_modules
+/public/storage
+/bootsrap/cache
+Homestead.yaml
+Homestead.json
+.env
+
+_ide_helper.php
