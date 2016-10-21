@@ -17,4 +17,8 @@ Route::get('/', function () {
 
 Route::auth();
 
-Route::get('/home', 'HomeController@index');
+// api route group
+Route::group(['middleware' => 'auth', 'prefix' => 'api'], function () {
+    Route::get('/', 'AuthenticateController@index');
+});
+

@@ -7,11 +7,14 @@ use Illuminate\Http\Request;
 use JWTAuth;
 use App\Models\User;
 
-class HomeController extends Controller
+class AuthenticateController extends Controller
 {
+    /**
+     * jwt token.
+     *
+     * @var string
+     */
     protected $token;
-    
-    protected $user;
 
     /**
      * Create a new controller instance.
@@ -25,8 +28,6 @@ class HomeController extends Controller
         // 登录成功，生成token
         $this->createToken();
 
-        // 返回token
-        $this->sendResponse();
     }
 
     /**
@@ -36,14 +37,14 @@ class HomeController extends Controller
      */
     public function index()
     {
-        return response($array, 200)->withCookie('token', $this->token);
+        return response()->json(['token' => $this->token]);
     }
 
-    protected function sendResponse()
-    {
-
-    }
-
+    /**
+     * create jwt token.
+     * 
+     * @return void
+     */
     protected function createToken()
     {
         $user = User::first();
@@ -51,10 +52,4 @@ class HomeController extends Controller
         $this->token = $token;
     }
 
-    public function post(Request $request)
-    {
-        $input = $request->all();
-//        var_dump($input);
-        return response()->json($input);
-    }
 }
