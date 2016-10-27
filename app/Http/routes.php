@@ -18,7 +18,7 @@ Route::get('/', function () {
 Route::auth();
 
 // api route group
-Route::group(['middleware' => 'auth', 'prefix' => 'api'], function () {
-    Route::get('/', 'AuthenticateController@index');
+Route::group(['middleware' => ['jwt.auth', 'jwt.refresh'], 'prefix' => 'api'], function () {
+    Route::get('/', 'ApiController@index');
 });
 
