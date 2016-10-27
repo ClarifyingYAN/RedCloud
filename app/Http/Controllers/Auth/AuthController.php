@@ -2,11 +2,13 @@
 
 namespace App\Http\Controllers\Auth;
 
+use Illuminate\Http\Request;
 use App\Models\User;
 use Validator;
 use App\Http\Controllers\Controller;
 use Illuminate\Foundation\Auth\ThrottlesLogins;
 use Illuminate\Foundation\Auth\AuthenticatesAndRegistersUsers;
+use JWTAuth;
 
 
 class AuthController extends Controller
@@ -67,7 +69,21 @@ class AuthController extends Controller
         return User::create([
             'name' => $data['name'],
             'email' => $data['email'],
+            'stu_id' => $data['stu_id'],
             'password' => bcrypt($data['password']),
         ]);
     }
+
+    protected function authenticated(Request $request, User $user)
+    {
+        $token = $this->createToken($user);
+        return response()->json(['token' => $token]);
+    }
+
+    protected function createToken($user)
+    {
+        $token = JWTAuth::fromUser($user);
+        return $token;
+    }
+
 }
