@@ -69,17 +69,29 @@ class AuthController extends Controller
         return User::create([
             'name' => $data['name'],
             'email' => $data['email'],
-            'stu_id' => $data['stu_id'],
             'password' => bcrypt($data['password']),
         ]);
     }
 
+    /**
+     * if authenticated return the token.
+     *
+     * @param Request $request
+     * @param User $user
+     * @return \Illuminate\Http\JsonResponse
+     */
     protected function authenticated(Request $request, User $user)
     {
         $token = $this->createToken($user);
         return response()->json(['token' => $token]);
     }
 
+    /**
+     * create the token according to the user.
+     *
+     * @param $user
+     * @return string
+     */
     protected function createToken($user)
     {
         $token = JWTAuth::fromUser($user);
