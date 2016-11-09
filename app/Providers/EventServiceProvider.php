@@ -19,7 +19,7 @@ class EventServiceProvider extends ServiceProvider
         'App\Events\FileDelete' => [
             'App\Listeners\FileDeleted',
         ],
-        'App\Eevents\FileMove' => [
+        'App\Events\FileMove' => [
             'App\Listeners\FileMoved',
         ],
     ];
