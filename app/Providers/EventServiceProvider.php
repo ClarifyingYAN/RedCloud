@@ -13,8 +13,14 @@ class EventServiceProvider extends ServiceProvider
      * @var array
      */
     protected $listen = [
-        'App\Events\SomeEvent' => [
-            'App\Listeners\EventListener',
+        'App\Events\FileCreate' => [
+            'App\Listeners\FileCreated',
+        ],
+        'App\Events\FileDelete' => [
+            'App\Listeners\FileDeleted',
+        ],
+        'App\Eevents\FileMove' => [
+            'App\Listeners\FileMoved',
         ],
     ];
 
