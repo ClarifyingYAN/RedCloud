@@ -15,13 +15,14 @@ class CreateFilesInfo extends Migration
         Schema::create('filesInfo', function (Blueprint $table) {
             $table->increments('id');
             $table->string('filename');
-            $table->string('pid');
-            $table->string('type');
-            $table->timestamps('ctime');
-            $table->string('size');
+            $table->string('basename');
             $table->string('path');
             $table->string('username');
+            $table->string('pid');
+            $table->string('type');
+            $table->string('size');
             $table->string('status');
+            $table->timestamps();
         });
     }
 
