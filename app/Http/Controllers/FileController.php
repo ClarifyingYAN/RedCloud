@@ -18,9 +18,9 @@ class FileController extends Controller
         $this->rootPath = storage_path('app' . DIRECTORY_SEPARATOR . 'public');
     }
 
-    public function file()
+    public function getSize($file)
     {
-
+        
     }
 
     /**
@@ -69,9 +69,25 @@ class FileController extends Controller
      */
     protected function getDirectoryFromPath($path)
     {
-        $start = strrpos($path, '\\');
+        $end = strrpos($path, '/');
 
-        return substr($path, 0, $start);
+        if (!$end)
+            return '/';
+        
+        return substr($path, 0, $end);
+    }
+
+    /**
+     * Get the directory from the path.
+     *
+     * @param $path
+     * @return string
+     */
+    protected function getFilenameFromPath($path)
+    {
+        $start = strrpos($path, '/');
+
+        return substr($path, $start + 1);
     }
 
     /**
