@@ -31,6 +31,39 @@ class CloudStorageController extends FileController
 //        return response()->json($this->listContents('/dir/'));
     }
 
+    protected function allFiles($directory)
+    {
+        $directory = base64_decode($directory);
+
+        return response()->json($this->getAllFiles($directory));
+    }
+
+    protected function getAllFiles($path)
+    {
+        $files = [];
+
+        $fileCollections = File::where([
+            'username' => $this->user->name,
+            'status' => 1,
+            'path' => $path,
+        ])->get();
+
+        foreach ($fileCollections as $fileCollection) {
+            $filename = $fileCollection->filename;
+            $type = $fileCollection->type;
+            $size = $fileCollection->size;
+            $basename = $fileCollection->basename;
+            array_push($files, compact('filename', 'type', 'size', 'path'));
+
+            if ($type == 'dir') {
+                $subFiles = $this->getAllFiles($basename);
+                $files = array_collapse([$files, $subFiles]);
+            }
+        }
+
+        return $files;
+    }
+
     /**
      * List current contents.
      *
@@ -44,7 +77,7 @@ class CloudStorageController extends FileController
             ->where('path', $path)
             ->where('status', '1')
             ->get();
-        
+
         foreach ($fileCollections as $fileCollection) {
             $filename = $fileCollection->filename;
             $type = $fileCollection->type;
@@ -159,20 +192,25 @@ class CloudStorageController extends FileController
      * 4. 事务执行
      * 5. 当删除后，创建一个新的同名文件，然后进行恢复该如何处理
      *
-     * @param Request $request
+     * @param Requests\SoftDeleteRequest $request
      * @return \Illuminate\Http\JsonResponse
      */
-    public function destroy(Request $request)
+    public function destroy(Requests\SoftDeleteRequest $request)
     {
         $files = $request->deletedFiles;
 
         $files = json_decode($files);
 
+        // 判断json解析出的file只是一个字符串而不是数组，如果是字符串则变为数组
+        if (!is_array($files))
+            $files = [$files];
+
         foreach ($files as $file) {
-            $bool = File::where('username', $this->user->name)
-                ->where('basename', $file)
-                ->where('status', 1)
-                ->update(['status' => 0]);
+            $bool = File::where([
+                'username' => $this->user->name,
+                'basename' => $file,
+                'status' => 1,
+            ])->update(['status' => 0]);
 
             if (!$bool)
                 return response()->json(['delete' => 'failed']);
@@ -188,15 +226,19 @@ class CloudStorageController extends FileController
      * @param Request $request
      * @return \Illuminate\Http\JsonResponse
      */
-    public function cloudMove(Request $request)
+    public function cloudMove(Requests\MoveRequest $request)
     {
-        $info = json_decode($request->deletedFiles, true);
+        $info = json_decode($request->movedFiles, true);
 
         foreach ($info['files'] as $file) {
-            $bool = File::where('username', $this->user->name)
-                ->where('status', 1)
-                ->where('basename', $file)
-                ->update(['path' => $info['to']]);
+            $bool = File::where([
+                'username' => $this->user->name,
+                'status' => 1,
+                'basename' => $file
+            ])->update([
+                'path' => $info['to'],
+                'basename' => $info['to'] . $file,
+            ]);
 
             if (!$bool)
                 return response()->json(['error' => 'failed']);
@@ -224,13 +266,14 @@ class CloudStorageController extends FileController
         if ($this->hasFile($this->getDirectoryFromPath($oldName), $this->getFilenameFromPath($newName)))
             return response()->json(['error' => 'have had file']);
 
-        $bool = File::where('username', $this->user->name)
-            ->where('status', 1)
-            ->where('basename', $oldName)
-            ->update([
-                'filename' => $this->getFilenameFromPath($newName),
-                'basename' => $newName,
-            ]);
+        $bool = File::where([
+            'username' => $this->user->name,
+            'status' => 1,
+            'basename' => $oldName,
+        ])->update([
+            'filename' => $this->getFilenameFromPath($newName),
+            'basename' => $newName,
+        ]);
 
         if (!$bool)
             return response()->json(['error' => 'failed']);
@@ -249,11 +292,12 @@ class CloudStorageController extends FileController
         if ($basename == '/')
             return true;
 
-        $directory = File::where('username', $this->user->name)
-            ->where('status', 1)
-            ->where('type', 'dir')
-            ->where('basename', $basename)
-            ->first();
+        $directory = File::where([
+            'username' => $this->user->name,
+            'status' => 1,
+            'type' => 'dir',
+            'basename' => $basename,
+        ])->first();
 
         if (!!$directory)
             return false;
