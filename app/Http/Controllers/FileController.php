@@ -98,8 +98,12 @@ class FileController extends Controller
      * @param bool $recursive
      * @return bool
      */
-    protected function makeDirectory($path, $mode = 0755, $recursive = false)
+    public function makeDirectory($path, $mode = 0755, $recursive = false)
     {
+        $path = $this->getRealPath($path);
+        if (file_exists($path))
+            return false;
+
         return mkdir($path, $mode, $recursive);
     }
 

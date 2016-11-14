@@ -2,13 +2,14 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\User;
 use Illuminate\Http\Request;
-use Auth;
 use App\Models\File;
 use App\Http\Requests;
 use Illuminate\Support\Facades\Input;
+use App\Events\FileCreate;
 
-class CloudStorageController extends FileController
+class CloudStorageController extends Controller
 {
     /**
      * User
@@ -17,12 +18,14 @@ class CloudStorageController extends FileController
      */
     protected $user;
 
+    protected $userRootPath;
+
     protected $files;
 
-    public function __construct()
+    public function __construct($user)
     {
-        parent::__construct();
-        $this->user = Auth::user();
+        $this->user = $user;
+        $this->userRootPath = $user->stu_id;
     }
 
     public function index()
@@ -31,14 +34,7 @@ class CloudStorageController extends FileController
 //        return response()->json($this->listContents('/dir/'));
     }
 
-    protected function allFiles($directory)
-    {
-        $directory = base64_decode($directory);
-
-        return response()->json($this->getAllFiles($directory));
-    }
-
-    protected function getAllFiles($path)
+    public function getAllFiles($path)
     {
         $files = [];
 
@@ -69,7 +65,7 @@ class CloudStorageController extends FileController
      *
      * @return array
      */
-    protected function listContents($path)
+    public function listContents($path)
     {
         $files = [];
 
@@ -138,18 +134,18 @@ class CloudStorageController extends FileController
     public function create()
     {
         $directory = base64_decode(Input::get('directory'));
-        $parentDirectory = $this->getDirectoryFromPath($directory);
+        $parentDirectory = dirname($directory);
 
         // Determine if the parent directory exists.
         if (!$this->hasDirectory($parentDirectory))
             return response()->json(['error' => 'dont have the parent directory']);
 
         //  Determine if the directory exists.
-        if (!$this->hasDirectory($directory))
+        if ($this->hasDirectory($directory))
             return response()->json(['error' => 'have had the directory']);
 
         $newDirectory = new File;
-        $newDirectory->filename = $this->getFilenameFromPath($directory);
+        $newDirectory->filename = basename($directory);
         $newDirectory->type = 'dir';
         $newDirectory->pid = $this->user->uid;
         $newDirectory->size = 0;
@@ -158,24 +154,14 @@ class CloudStorageController extends FileController
         $newDirectory->basename = $directory;
         $newDirectory->path = $parentDirectory;
 
+        $listenerArray = event(new FileCreate($this->user->uid, $directory));
+        if (!$listenerArray[0])
+            return response()->json(['error' => 'disk create error']);
+
         if (!$newDirectory->save())
-            return response()->json(['status' => '200']);
+            return response()->json(['error' => 'save failed']);
 
         return response()->json(['status' => '200']);
-    }
-
-    /**
-     * Show the directory list.
-     *
-     * @param $directory
-     * @return \Illuminate\Http\JsonResponse
-     */
-    public function show($directory)
-    {
-        $directory = base64_decode($directory);
-        $files = $this->listContents($directory);
-
-        return response()->json($files);
     }
 
     public function update(Request $request)
@@ -186,7 +172,7 @@ class CloudStorageController extends FileController
     /**
      * Soft delete.
      * 还未完成：
-     * 1. 判断是否是json传入
+     * 1. 判断是否是json传入  xx
      * 2. 如果某一个文件错误（如不存在）的解决方案，或者返回错误机制
      * 3. 优化数据库删除的方法
      * 4. 事务执行
@@ -226,15 +212,17 @@ class CloudStorageController extends FileController
      * @param Request $request
      * @return \Illuminate\Http\JsonResponse
      */
-    public function cloudMove(Requests\MoveRequest $request)
+    public function cloudMove($info)
     {
-        $info = json_decode($request->movedFiles, true);
+        if (in_array($info['to'], $info['files'])) {
+            return false;
+        }
 
         foreach ($info['files'] as $file) {
             $bool = File::where([
                 'username' => $this->user->name,
                 'status' => 1,
-                'basename' => $file
+                'basename' => $file,
             ])->update([
                 'path' => $info['to'],
                 'basename' => $info['to'] . $file,
@@ -244,7 +232,7 @@ class CloudStorageController extends FileController
                 return response()->json(['error' => 'failed']);
         }
 
-        return response()->json(['status', '200']);
+        return true;
     }
 
     /**
@@ -259,11 +247,11 @@ class CloudStorageController extends FileController
         $newName = $request->newName;
 
         // Determine if the old name exists.
-        if ($this->hasFile($this->getDirectoryFromPath($oldName), $this->getFilenameFromPath($newName)))
+        if ($this->hasFile(dirname($oldName), basename($newName)))
             return response()->json(['error' => 'don\'t have the old file']);
         
         // Determine if the new name exists.
-        if ($this->hasFile($this->getDirectoryFromPath($oldName), $this->getFilenameFromPath($newName)))
+        if ($this->hasFile(dirname($oldName), basename($newName)))
             return response()->json(['error' => 'have had file']);
 
         $bool = File::where([
@@ -271,7 +259,7 @@ class CloudStorageController extends FileController
             'status' => 1,
             'basename' => $oldName,
         ])->update([
-            'filename' => $this->getFilenameFromPath($newName),
+            'filename' => basename($newName),
             'basename' => $newName,
         ]);
 
@@ -299,7 +287,7 @@ class CloudStorageController extends FileController
             'basename' => $basename,
         ])->first();
 
-        if (!!$directory)
+        if (!$directory)
             return false;
 
         return true;
