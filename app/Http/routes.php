@@ -20,5 +20,14 @@ Route::auth();
 // api route group
 Route::group(['middleware' => ['jwt.auth', 'jwt.refresh'], 'prefix' => 'api'], function () {
     Route::get('/', 'ApiController@index');
+    Route::get('/file', 'ApiController@getFiles');
+    Route::get('/allFiles', 'ApiController@getAllFiles');
+    Route::match(['put', 'patch'], '/file/move', 'ApiController@move');
 });
+
+Route::get('/file/all/{directory}', 'CloudStorageController@allFiles');
+Route::match(['put', 'patch'], 'file/rename', 'CloudStorageController@cloudChangeName');
+Route::match(['put', 'patch'], 'file/move', 'CloudStorageController@cloudMove');
+Route::delete('file/forceDelete', 'CloudStorageController@forceDelete');
+Route::resource('file', 'CloudStorageController');
 
