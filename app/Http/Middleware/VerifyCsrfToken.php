@@ -14,5 +14,8 @@ class VerifyCsrfToken extends BaseVerifier
     protected $except = [
         //
         '/login',
+        '/file',
+        '/file/*',
+        '/api/*',
     ];
 }
