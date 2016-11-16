@@ -23,11 +23,10 @@ Route::group(['middleware' => ['jwt.auth', 'jwt.refresh'], 'prefix' => 'api'], f
     Route::get('/file', 'ApiController@getFiles');
     Route::get('/allFiles', 'ApiController@getAllFiles');
     Route::match(['put', 'patch'], '/file/move', 'ApiController@move');
+    Route::match(['put', 'patch'], '/file/rename', 'ApiController@rename');
+    Route::get('/file/create/{directory}', 'ApiController@create');
+    Route::delete('/file/delete', 'ApiController@delete');
 });
 
-Route::get('/file/all/{directory}', 'CloudStorageController@allFiles');
-Route::match(['put', 'patch'], 'file/rename', 'CloudStorageController@cloudChangeName');
-Route::match(['put', 'patch'], 'file/move', 'CloudStorageController@cloudMove');
-Route::delete('file/forceDelete', 'CloudStorageController@forceDelete');
 Route::resource('file', 'CloudStorageController');
 

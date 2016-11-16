@@ -6,7 +6,6 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use App\Models\File;
 use App\Http\Requests;
-use Illuminate\Support\Facades\Input;
 use App\Events\FileCreate;
 
 class CloudStorageController extends Controller
@@ -131,18 +130,21 @@ class CloudStorageController extends Controller
      *
      * @return \Illuminate\Http\JsonResponse
      */
-    public function create()
+    public function create($directory)
     {
-        $directory = base64_decode(Input::get('directory'));
         $parentDirectory = dirname($directory);
+
+        // 自己挖的坑 linux和win下路径分隔符
+        if ($parentDirectory == '\\')
+            $parentDirectory = '/';
 
         // Determine if the parent directory exists.
         if (!$this->hasDirectory($parentDirectory))
-            return response()->json(['error' => 'dont have the parent directory']);
+            return false;
 
         //  Determine if the directory exists.
         if ($this->hasDirectory($directory))
-            return response()->json(['error' => 'have had the directory']);
+            return false;
 
         $newDirectory = new File;
         $newDirectory->filename = basename($directory);
@@ -156,12 +158,12 @@ class CloudStorageController extends Controller
 
         $listenerArray = event(new FileCreate($this->user->uid, $directory));
         if (!$listenerArray[0])
-            return response()->json(['error' => 'disk create error']);
+            return false;
 
         if (!$newDirectory->save())
-            return response()->json(['error' => 'save failed']);
+            return false;
 
-        return response()->json(['status' => '200']);
+        return true;
     }
 
     public function update(Request $request)
@@ -181,28 +183,63 @@ class CloudStorageController extends Controller
      * @param Requests\SoftDeleteRequest $request
      * @return \Illuminate\Http\JsonResponse
      */
-    public function destroy(Requests\SoftDeleteRequest $request)
+    public function delete($files)
     {
-        $files = $request->deletedFiles;
-
-        $files = json_decode($files);
-
-        // 判断json解析出的file只是一个字符串而不是数组，如果是字符串则变为数组
-        if (!is_array($files))
-            $files = [$files];
-
         foreach ($files as $file) {
-            $bool = File::where([
+            // 删目录
+            $dir = File::where([
                 'username' => $this->user->name,
                 'basename' => $file,
+                'type' =>'dir',
+                'status' => 1,
+            ])->first();
+
+            if (!!$dir)
+                if (!$this->deleteDirectory($file))
+                    return false;
+
+            // 删文件
+            File::where([
+                'username' => $this->user->name,
+                'basename' => $file,
+                'type' => 'file',
                 'status' => 1,
             ])->update(['status' => 0]);
-
-            if (!$bool)
-                return response()->json(['delete' => 'failed']);
         }
 
-        return response()->json(['status', '200']);
+        return true;
+    }
+
+    public function deleteDirectory($directory)
+    {
+        $directory = File::where([
+            'basename' => $directory,
+        ])->first();
+
+        if (!$directory)
+            return false;
+
+        $files = File::where([
+            'username' => $this->user->name,
+            'path' => $directory->basename,
+            'type' => 'dir',
+            'status' => 1,
+        ])->get();
+
+        if (!!$files)
+            foreach ($files as $file) {
+                $this->deleteDirectory($directory);
+            }
+
+        File::where([
+            'username' => $this->user->name,
+            'status' => 1,
+            'path' => $directory->basename,
+        ])->update(['status' => 0]);
+
+        File::whereBasename($directory->basename)->update(['status' => 0]);
+
+        return true;
     }
 
     /**
@@ -241,18 +278,15 @@ class CloudStorageController extends Controller
      * @param Request $request
      * @return \Illuminate\Http\JsonResponse
      */
-    public function cloudChangeName(Request $request)
+    public function cloudChangeName($oldName, $newName)
     {
-        $oldName = $request->oldName;
-        $newName = $request->newName;
-
         // Determine if the old name exists.
         if ($this->hasFile(dirname($oldName), basename($newName)))
-            return response()->json(['error' => 'don\'t have the old file']);
+            return false;
         
         // Determine if the new name exists.
         if ($this->hasFile(dirname($oldName), basename($newName)))
-            return response()->json(['error' => 'have had file']);
+            return false;
 
         $bool = File::where([
             'username' => $this->user->name,
@@ -260,13 +294,13 @@ class CloudStorageController extends Controller
             'basename' => $oldName,
         ])->update([
             'filename' => basename($newName),
-            'basename' => $newName,
+            'basename' => dirname($oldName) . '/' .basename($newName)
         ]);
 
         if (!$bool)
-            return response()->json(['error' => 'failed']);
+            return false;
 
-        return response()->json(['status' => '200']);
+        return true;
     }
 
     /**
@@ -275,16 +309,20 @@ class CloudStorageController extends Controller
      * @param $basename
      * @return bool
      */
-    protected function hasDirectory($basename)
+    protected function hasDirectory($directory)
     {
-        if ($basename == '/')
+        // 自己挖的坑 linux和win下路径分隔符
+        if ($directory == '\\')
+            $directory = '/';
+
+        if ($directory == '/')
             return true;
 
         $directory = File::where([
             'username' => $this->user->name,
             'status' => 1,
             'type' => 'dir',
-            'basename' => $basename,
+            'basename' => $directory,
         ])->first();
 
         if (!$directory)
