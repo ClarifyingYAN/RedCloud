@@ -46,8 +46,11 @@ class FileController extends Controller
      * @param bool $force
      * @return bool
      */
-    protected function move($from, $to, $force = false)
+    public function move($from, $to, $force = false)
     {
+        $from = $this->getRealPath($from);
+        $to = $this->getRealPath($to);
+
         // If in force mode.
         // Determine if the directory exists.
         // If not, create the directory.
@@ -113,7 +116,7 @@ class FileController extends Controller
      * @param $directory
      * @return bool
      */
-    protected function deleteDirectory($directory)
+    public function deleteDirectory($directory)
     {
         if (!is_dir($directory)) {
             return false;
@@ -129,6 +132,36 @@ class FileController extends Controller
         }
 
         return rmdir($directory);
+    }
+
+    /**
+     * Delete file.
+     * 
+     * @param $file
+     * @return bool
+     */
+    public function deleteFile($file)
+    {
+        if (is_dir($file))
+            return false;
+        
+        return unlink($file);
+    }
+
+    /**
+     * Delete file or directory.
+     *
+     * @param $file
+     * @return bool
+     */
+    public function delete($file)
+    {
+        $file = $this->getRealPath($file);
+        
+        if (is_dir($file))
+            return $this->deleteDirectory($file);
+        else
+            return $this->deleteFile($file);
     }
 
     /**

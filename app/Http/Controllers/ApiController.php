@@ -22,8 +22,12 @@ class ApiController extends Controller
      */
     public function __construct()
     {
-        $this->user = Auth::user();
-        $this->cloud = new Cloud($this->user);
+        if (Auth::check()) {        // 否则 php artisan route:list 将会报出 trying to get none object 错误
+            $this->user = Auth::user();
+
+            $this->cloud = new Cloud($this->user);
+        }
+
     }
 
     /**
@@ -62,7 +66,7 @@ class ApiController extends Controller
         if (!$this->cloud->cloudMove($info))
             return response()->json(['error' => 'failed']);
         
-        return response()->json(['status', '200']);
+        return response()->json(['status' => '200']);
     }
 
     public function rename(Requests\RenameRequest $request)
@@ -99,6 +103,16 @@ class ApiController extends Controller
         
         if (!$this->cloud->delete($files))
             return response()->json(['error' => 'failed']);
+
+        return response()->json(['status' => '200']);
+    }
+
+    public function destroy(Request $request)
+    {
+        $files = json_decode($request->deletedFiles);
+        
+        if (!$this->cloud->forceDelete($files))
+            return response()->json(['failed']);
 
         return response()->json(['status' => '200']);
     }

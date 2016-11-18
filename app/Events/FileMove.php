@@ -9,24 +9,22 @@ use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
 class FileMove extends Event
 {
     use SerializesModels;
+    
+    public $user;
+    
+    public $from;
+    
+    public $to;
 
     /**
      * Create a new event instance.
      *
      * @return void
      */
-    public function __construct()
+    public function __construct($user, $from, $to)
     {
-        //
-    }
-
-    /**
-     * Get the channels the event should be broadcast on.
-     *
-     * @return array
-     */
-    public function broadcastOn()
-    {
-        return [];
+        $this->user = $user;
+        $this->from = $from;
+        $this->to = $to;
     }
 }

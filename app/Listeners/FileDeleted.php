@@ -3,6 +3,7 @@
 namespace App\Listeners;
 
 use App\Events\FileDelete;
+use App\Http\Controllers\FileController;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Contracts\Queue\ShouldQueue;
 
@@ -26,6 +27,14 @@ class FileDeleted
      */
     public function handle(FileDelete $event)
     {
-        //
+        $this->delete($event->file);
     }
+    
+    public function delete($filename)
+    {
+        $file = new FileController();
+        
+        return $file->delete($filename);
+    }
+    
 }

@@ -10,23 +10,19 @@ class FileDelete extends Event
 {
     use SerializesModels;
 
+    public $user;
+
+    public $file;
+    
     /**
      * Create a new event instance.
      *
      * @return void
      */
-    public function __construct()
+    public function __construct($user, $file)
     {
-        //
+        $this->user = $user;
+        $this->file = $file;
     }
-
-    /**
-     * Get the channels the event should be broadcast on.
-     *
-     * @return array
-     */
-    public function broadcastOn()
-    {
-        return [];
-    }
+    
 }

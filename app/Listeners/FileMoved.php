@@ -2,7 +2,9 @@
 
 namespace App\Listeners;
 
-use App\Eevents\FileMove;
+use App\Events\FileMove;
+use App\Http\Controllers\FileController;
+use Cron\FieldFactory;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Contracts\Queue\ShouldQueue;
 
@@ -26,6 +28,13 @@ class FileMoved
      */
     public function handle(FileMove $event)
     {
-        //
+        $this->move($event->from, $event->to);
+    }
+    
+    public function move($from, $to)
+    {
+        $file = new FileController();
+        
+        $file->move($from, $to);
     }
 }

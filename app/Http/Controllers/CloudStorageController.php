@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Events\FileDelete;
+use App\Events\FileMove;
 use App\Models\User;
 use Illuminate\Http\Request;
 use App\Models\File;
@@ -243,7 +245,7 @@ class CloudStorageController extends Controller
     }
 
     /**
-     * move files.
+     * ` files.
      * 缺陷同删除方法
      *
      * @param Request $request
@@ -264,6 +266,8 @@ class CloudStorageController extends Controller
                 'path' => $info['to'],
                 'basename' => $info['to'] . $file,
             ]);
+
+            $listenerArray = event(new FileMove($this->user->id, $file, $info['to'] . $file));
 
             if (!$bool)
                 return response()->json(['error' => 'failed']);
@@ -296,6 +300,8 @@ class CloudStorageController extends Controller
             'filename' => basename($newName),
             'basename' => dirname($oldName) . '/' .basename($newName)
         ]);
+
+        $listenerArray = event(new FileMove($this->user->stu_id, $oldName, dirname($oldName) . '/' .basename($newName)));
 
         if (!$bool)
             return false;
@@ -331,14 +337,21 @@ class CloudStorageController extends Controller
         return true;
     }
 
-    public function forceDelete()
+    public function forceDelete($files)
     {
-        
-    }
+        foreach ($files as $file) {
+            $bool = File::where([
+                'username' => $this->user->name,
+                'basename' => $file,
+            ])->delete();
 
-    public function edit(Request $request)
-    {
+            if (!$bool)
+                return false;
+            
+            $listenerArray = event(new FileDelete($this->user->name, $file));
+        }
 
+        return true;
     }
 
 }
