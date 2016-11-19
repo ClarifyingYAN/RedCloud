@@ -31,17 +31,16 @@ class CloudStorageController extends Controller
 
     public function index()
     {
-
 //        return response()->json($this->listContents('/dir/'));
     }
 
-    public function getAllFiles($path)
+    public function getAllFiles($path, $status = 1)
     {
         $files = [];
 
         $fileCollections = File::where([
             'username' => $this->user->name,
-            'status' => 1,
+            'status' => $status,
             'path' => $path,
         ])->get();
 
@@ -50,10 +49,11 @@ class CloudStorageController extends Controller
             $type = $fileCollection->type;
             $size = $fileCollection->size;
             $basename = $fileCollection->basename;
-            array_push($files, compact('filename', 'type', 'size', 'path'));
+            $updated_at = $fileCollection->updated_at;
+            array_push($files, compact('filename', 'type', 'size', 'path', 'updated_at'));
 
             if ($type == 'dir') {
-                $subFiles = $this->getAllFiles($basename);
+                $subFiles = $this->getAllFiles($basename, $status);
                 $files = array_collapse([$files, $subFiles]);
             }
         }
@@ -79,7 +79,8 @@ class CloudStorageController extends Controller
             $filename = $fileCollection->filename;
             $type = $fileCollection->type;
             $size = $fileCollection->size;
-            array_push($files, compact('filename', 'type', 'size', 'path'));
+            $updated_at = $fileCollection->updated_at;
+            array_push($files, compact('filename', 'type', 'size', 'path', 'updated_at'));
         }
 
         return $files;
@@ -168,11 +169,6 @@ class CloudStorageController extends Controller
         return true;
     }
 
-    public function update(Request $request)
-    {
-
-    }
-
     /**
      * Soft delete.
      * 还未完成：
@@ -230,7 +226,7 @@ class CloudStorageController extends Controller
 
         if (!!$files)
             foreach ($files as $file) {
-                $this->deleteDirectory($directory);
+                $this->deleteDirectory($file->basename);
             }
 
         File::where([
@@ -340,15 +336,64 @@ class CloudStorageController extends Controller
     public function forceDelete($files)
     {
         foreach ($files as $file) {
-            $bool = File::where([
+            $type = File::where([
                 'username' => $this->user->name,
+                'status' => 0,
+                'basename' => $file,
+            ])->first()->type;
+
+            // 递归删除目录文件
+            if ($type == 'dir') {
+                $all = $this->getAllFiles($file, 0);
+
+                foreach ($all as $lowFile) {
+                    $bool = File::where([
+                        'username' => $this->user->name,
+                        'basename' => $lowFile['path'] . '/' .$lowFile['filename'],
+                    ])->delete();
+
+                    if (!$bool) {
+                        return false;
+                    }
+                }
+            }
+
+            // 删除当前文件
+            $bool2 = File::where([
+                'username' => $this->user->name,
+                'status' => 0,
                 'basename' => $file,
             ])->delete();
+            if (!$bool2)
+                return false;
+
+            $listenerArray = event(new FileDelete($this->user->name, $file));
+        }
+
+        return true;
+    }
+
+    public function getRecycleBin()
+    {
+        $files = File::where([
+            'username' => $this->user->name,
+            'status' => 0,
+        ])->get();
+
+        return $files;
+    }
+
+    public function recover($files)
+    {
+        foreach ($files as $file) {
+            $bool = File::where([
+                'username' => $this->user->name,
+                'status' => 0,
+                'basename' => $file,
+            ])->update(['status' => 1]);
 
             if (!$bool)
                 return false;
-            
-            $listenerArray = event(new FileDelete($this->user->name, $file));
         }
 
         return true;

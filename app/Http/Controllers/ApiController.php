@@ -116,5 +116,21 @@ class ApiController extends Controller
 
         return response()->json(['status' => '200']);
     }
+    
+    public function getRecycle()
+    {
+        $files = $this->cloud->getRecycleBin();
+        
+        return response()->json($files);
+    }
+    
+    public function recover(Request $request)
+    {
+        $files = json_decode($request->recoverFiles);
+        if (!$this->cloud->recover($files))
+            return response()->json(['error' => 'failed']);
+        
+        return response()->json(['status' => '200']);
+    }
 
 }
