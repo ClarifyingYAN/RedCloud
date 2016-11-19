@@ -15,6 +15,6 @@ class File extends Model
 
     protected $fillable = ['filename', 'type', 'path'];
 
-    protected $visible = ['filename', 'type', 'path', 'basename'];
+    protected $visible = ['filename', 'type', 'path', 'basename', 'updated_at'];
 
 }
