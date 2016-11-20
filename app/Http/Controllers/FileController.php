@@ -12,7 +12,12 @@ class FileController extends Controller
      * @var string
      */
     protected $rootPath;
-    
+
+    /**
+     * Set root path.
+     * 
+     * FileController constructor.
+     */
     public function __construct()
     {
         $this->rootPath = storage_path('app' . DIRECTORY_SEPARATOR . 'public');

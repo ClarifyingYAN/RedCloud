@@ -9,9 +9,18 @@ use App\Http\Controllers\CloudStorageController as Cloud;
 
 class ApiController extends Controller
 {
-
+    /**
+     * user.
+     *
+     * @var \App\Models\User|null
+     */
     private $user;
-    
+
+    /**
+     * Instance of cloudStorageController class.
+     *
+     * @var CloudStorageController
+     */
     private $cloud;
 
     /**
@@ -43,6 +52,12 @@ class ApiController extends Controller
         );
     }
 
+    /**
+     * Get files.
+     *
+     * @param string $directory
+     * @return \Illuminate\Http\JsonResponse
+     */
     public function getFiles($directory = 'Lw==')
     {
         $directory = base64_decode($directory);
@@ -50,7 +65,13 @@ class ApiController extends Controller
 
         return response()->json($files);
     }
-    
+
+    /**
+     * Get all files.
+     *
+     * @param string $directory
+     * @return \Illuminate\Http\JsonResponse
+     */
     public function getAllFiles($directory = 'Lw==')
     {
         $directory = base64_decode($directory);
@@ -59,6 +80,12 @@ class ApiController extends Controller
         return response()->json($files);
     }
 
+    /**
+     * Move the files.
+     *
+     * @param Requests\MoveRequest $request
+     * @return \Illuminate\Http\JsonResponse
+     */
     public function move(Requests\MoveRequest $request)
     {
         $info = json_decode($request->movedFiles, true);
@@ -68,6 +95,12 @@ class ApiController extends Controller
         return response()->json(['status' => '200']);
     }
 
+    /**
+     * Rename the file.
+     *
+     * @param Requests\RenameRequest $request
+     * @return \Illuminate\Http\JsonResponse
+     */
     public function rename(Requests\RenameRequest $request)
     {
         $newName = $request->newName;
@@ -79,6 +112,12 @@ class ApiController extends Controller
         return response()->json(['status' => '200']);
     }
 
+    /**
+     * Create the directory.
+     *
+     * @param null $directory
+     * @return \Illuminate\Http\JsonResponse
+     */
     public function create($directory = null)
     {
         if ($directory === null)
@@ -106,6 +145,12 @@ class ApiController extends Controller
 //        return response()->json(['status' => '200']);
 //    }
 
+    /**
+     * Force delete.
+     *
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse
+     */
     public function destroy(Request $request)
     {
         $files = json_decode($request->deletedFiles);

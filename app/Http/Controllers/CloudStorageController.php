@@ -13,25 +13,43 @@ use App\Events\FileCreate;
 class CloudStorageController extends Controller
 {
     /**
-     * User
-     *
-     * @var \App\Models\User|null
+     * user model.
+     * 
+     * @var
      */
     protected $user;
 
+    /**
+     * user root path.
+     * 
+     * @var string
+     */
     protected $userRootPath;
 
+    /**
+     * define user and user root path.
+     * 
+     * CloudStorageController constructor.
+     * @param $user
+     */
     public function __construct($user)
     {
         $this->user = $user;
         $this->userRootPath = '/' . $user->stu_id;
     }
 
-    public function index()
-    {
-//        return response()->json($this->listContents('/dir/'));
-    }
+//    public function index()
+//    {
+////        return response()->json($this->listContents('/dir/'));
+//    }
 
+    /**
+     * Get all files. (include sub files)
+     * 
+     * @param $path
+     * @param int $status
+     * @return array
+     */
     public function getAllFiles($path, $status = 1)
     {
         $files = [];
@@ -60,8 +78,9 @@ class CloudStorageController extends Controller
     }
 
     /**
-     * List current contents.
-     *
+     * Get files.
+     * 
+     * @param $path
      * @return array
      */
     public function listContents($path)
@@ -113,6 +132,13 @@ class CloudStorageController extends Controller
 //        return response()->json(['status'=> 200]);
 //    }
 
+    /**
+     * Determine if the file exists.
+     * 
+     * @param $path
+     * @param $filename
+     * @return bool
+     */
     protected function hasFile($path, $filename)
     {
         $file = File::where('username', $this->user->name)
@@ -128,8 +154,9 @@ class CloudStorageController extends Controller
 
     /**
      * Create directory.
-     *
-     * @return \Illuminate\Http\JsonResponse
+     * 
+     * @param $directory
+     * @return bool
      */
     public function create($directory)
     {
@@ -218,6 +245,12 @@ class CloudStorageController extends Controller
 //        return true;
 //    }
 
+    /**
+     * Delete Directory.
+     * 
+     * @param $directory
+     * @return bool
+     */
     public function deleteDirectory($directory)
     {
         $directory = File::where([
@@ -251,11 +284,10 @@ class CloudStorageController extends Controller
     }
 
     /**
-     * ` files.
-     * 缺陷同删除方法
-     *
-     * @param Request $request
-     * @return \Illuminate\Http\JsonResponse
+     * Move the files.
+     * 
+     * @param $info
+     * @return bool|\Illuminate\Http\JsonResponse
      */
     public function cloudMove($info)
     {
@@ -284,6 +316,12 @@ class CloudStorageController extends Controller
         return true;
     }
 
+    /**
+     * Set root path.
+     * 
+     * @param $path
+     * @return string
+     */
     private function setRoot($path)
     {
         $path = dirname($path);
@@ -296,9 +334,10 @@ class CloudStorageController extends Controller
 
     /**
      * Change file's name.
-     *
-     * @param Request $request
-     * @return \Illuminate\Http\JsonResponse
+     * 
+     * @param $oldName
+     * @param $newName
+     * @return bool
      */
     public function cloudChangeName($oldName, $newName)
     {
@@ -331,8 +370,8 @@ class CloudStorageController extends Controller
 
     /**
      * Determine if the directory had been already exists.
-     *
-     * @param $basename
+     * 
+     * @param $directory
      * @return bool
      */
     protected function hasDirectory($directory)
@@ -357,6 +396,13 @@ class CloudStorageController extends Controller
         return true;
     }
 
+    /**
+     * Force delete files.
+     * 
+     * @param $files
+     * @return bool
+     * @throws \Exception
+     */
     public function forceDelete($files)
     {
         foreach ($files as $file) {
@@ -397,19 +443,24 @@ class CloudStorageController extends Controller
         return true;
     }
 
-    public function getRecycleBin()
-    {
-        $files = File::where([
-            'username' => $this->user->name,
-            'status' => 0,
-        ])->get();
+    /**
+     * get recycle
+     * 
+     * @return \Illuminate\Database\Eloquent\Collection|static[]
+     */
+//    public function getRecycleBin()
+//    {
+//        $files = File::where([
+//            'username' => $this->user->name,
+//            'status' => 0,
+//        ])->get();
+//
+//        return $files;
+//    }
 
-        return $files;
-    }
-
-    public function recover($files)
-    {
-
-    }
+//    public function recover($files)
+//    {
+//
+//    }
 
 }
