@@ -27,8 +27,8 @@ Route::group(['middleware' => ['jwt.auth', 'jwt.refresh'], 'prefix' => 'api'], f
     Route::get('/file/create/{directory}', 'ApiController@create');
     Route::delete('/file/delete', 'ApiController@delete');
     Route::delete('/file/destroy', 'ApiController@destroy');
-    Route::get('/recycle', 'ApiController@getRecycle');
-    Route::match(['put', 'patch'], '/file/recover', 'ApiController@recover');
+//    Route::get('/recycle', 'ApiController@getRecycle');
+//    Route::match(['put', 'patch'], '/file/recover', 'ApiController@recover');
 });
 
 

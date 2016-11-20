@@ -6,7 +6,6 @@ use App\Http\Requests;
 use Illuminate\Http\Request;
 use Auth;
 use App\Http\Controllers\CloudStorageController as Cloud;
-use Illuminate\Support\Facades\Input;
 
 class ApiController extends Controller
 {
@@ -93,19 +92,19 @@ class ApiController extends Controller
         return response()->json(['status' => '200']);
     }
 
-    public function delete(Requests\SoftDeleteRequest $request)
-    {
-        $files = json_decode($request->deletedFiles);
-
-        // 判断json解析出的file只是一个字符串而不是数组，如果是字符串则变为数组
-        if (!is_array($files))
-            $files = [$files];
-        
-        if (!$this->cloud->delete($files))
-            return response()->json(['error' => 'failed']);
-
-        return response()->json(['status' => '200']);
-    }
+//    public function delete(Requests\SoftDeleteRequest $request)
+//    {
+//        $files = json_decode($request->deletedFiles);
+//
+//        // 判断json解析出的file只是一个字符串而不是数组，如果是字符串则变为数组
+//        if (!is_array($files))
+//            $files = [$files];
+//        
+//        if (!$this->cloud->delete($files))
+//            return response()->json(['error' => 'failed']);
+//
+//        return response()->json(['status' => '200']);
+//    }
 
     public function destroy(Request $request)
     {
@@ -117,20 +116,20 @@ class ApiController extends Controller
         return response()->json(['status' => '200']);
     }
     
-    public function getRecycle()
-    {
-        $files = $this->cloud->getRecycleBin();
-        
-        return response()->json($files);
-    }
+//    public function getRecycle()
+//    {
+//        $files = $this->cloud->getRecycleBin();
+//        
+//        return response()->json($files);
+//    }
     
-    public function recover(Request $request)
-    {
-        $files = json_decode($request->recoverFiles);
-        if (!$this->cloud->recover($files))
-            return response()->json(['error' => 'failed']);
-        
-        return response()->json(['status' => '200']);
-    }
+//    public function recover(Request $request)
+//    {
+//        $files = json_decode($request->recoverFiles);
+//        if (!$this->cloud->recover($files))
+//            return response()->json(['error' => 'failed']);
+//        
+//        return response()->json(['status' => '200']);
+//    }
 
 }

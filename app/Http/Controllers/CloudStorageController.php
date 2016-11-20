@@ -21,12 +21,10 @@ class CloudStorageController extends Controller
 
     protected $userRootPath;
 
-    protected $files;
-
     public function __construct($user)
     {
         $this->user = $user;
-        $this->userRootPath = $user->stu_id;
+        $this->userRootPath = '/' . $user->stu_id;
     }
 
     public function index()
@@ -159,7 +157,8 @@ class CloudStorageController extends Controller
         $newDirectory->basename = $directory;
         $newDirectory->path = $parentDirectory;
 
-        $listenerArray = event(new FileCreate($this->user->uid, $directory));
+        $listenerArray = event(new FileCreate($this->user->uid,
+            $this->userRootPath . '/' . $directory));
         if (!$listenerArray[0])
             return false;
 
@@ -181,32 +180,43 @@ class CloudStorageController extends Controller
      * @param Requests\SoftDeleteRequest $request
      * @return \Illuminate\Http\JsonResponse
      */
-    public function delete($files)
-    {
-        foreach ($files as $file) {
-            // 删目录
-            $dir = File::where([
-                'username' => $this->user->name,
-                'basename' => $file,
-                'type' =>'dir',
-                'status' => 1,
-            ])->first();
-
-            if (!!$dir)
-                if (!$this->deleteDirectory($file))
-                    return false;
-
-            // 删文件
-            File::where([
-                'username' => $this->user->name,
-                'basename' => $file,
-                'type' => 'file',
-                'status' => 1,
-            ])->update(['status' => 0]);
-        }
-
-        return true;
-    }
+//    public function delete($files)
+//    {
+//        foreach ($files as $file) {
+//            // 删目录
+//            $dir = File::where([
+//                'username' => $this->user->name,
+//                'basename' => $file,
+//                'type' =>'dir',
+//                'status' => 1,
+//            ])->first();
+//
+//            if (!!$dir)
+//                if (!$this->deleteDirectory($file))
+//                    return false;
+//
+//            // 删文件
+//            File::where([
+//                'username' => $this->user->name,
+//                'basename' => $file,
+//                'type' => 'file',
+//                'status' => 1,
+//            ])->update(['status' => 0]);
+//        }
+//
+//        foreach ($files as $file) {
+//            $bool = File::where([
+//                'username' => $this->user->name,
+//                'status' => 1,
+//                'basename' => $file,
+//            ])->update(['status' => 0]);
+//
+////            if (!$bool)
+////                return false;
+//        }
+//
+//        return true;
+//    }
 
     public function deleteDirectory($directory)
     {
@@ -260,16 +270,28 @@ class CloudStorageController extends Controller
                 'basename' => $file,
             ])->update([
                 'path' => $info['to'],
-                'basename' => $info['to'] . $file,
+                'basename' => $this->setRoot($info['to']) . '/' .basename($file),
             ]);
 
-            $listenerArray = event(new FileMove($this->user->id, $file, $info['to'] . $file));
+            $listenerArray = event(new FileMove($this->user->id,
+                $this->userRootPath . $file,
+                $this->userRootPath . $info['to'] . basename($file)));
 
             if (!$bool)
                 return response()->json(['error' => 'failed']);
         }
 
         return true;
+    }
+
+    private function setRoot($path)
+    {
+        $path = dirname($path);
+
+        if ($path == '/' || $path == '\\')
+            return '';
+        else
+            return $path;
     }
 
     /**
@@ -294,10 +316,12 @@ class CloudStorageController extends Controller
             'basename' => $oldName,
         ])->update([
             'filename' => basename($newName),
-            'basename' => dirname($oldName) . '/' .basename($newName)
+            'basename' => $this->setRoot($oldName) . '/' .basename($newName)
         ]);
 
-        $listenerArray = event(new FileMove($this->user->stu_id, $oldName, dirname($oldName) . '/' .basename($newName)));
+        $listenerArray = event(new FileMove($this->user->stu_id,
+            $this->userRootPath . '/' . $oldName,
+            $this->userRootPath . '/' . dirname($oldName) . '/' .basename($newName)));
 
         if (!$bool)
             return false;
@@ -338,13 +362,13 @@ class CloudStorageController extends Controller
         foreach ($files as $file) {
             $type = File::where([
                 'username' => $this->user->name,
-                'status' => 0,
+                'status' => 1,
                 'basename' => $file,
             ])->first()->type;
 
             // 递归删除目录文件
             if ($type == 'dir') {
-                $all = $this->getAllFiles($file, 0);
+                $all = $this->getAllFiles($file, 1);
 
                 foreach ($all as $lowFile) {
                     $bool = File::where([
@@ -361,13 +385,13 @@ class CloudStorageController extends Controller
             // 删除当前文件
             $bool2 = File::where([
                 'username' => $this->user->name,
-                'status' => 0,
+                'status' => 1,
                 'basename' => $file,
             ])->delete();
             if (!$bool2)
                 return false;
 
-            $listenerArray = event(new FileDelete($this->user->name, $file));
+            $listenerArray = event(new FileDelete($this->user->name, $this->userRootPath . '/' . $file));
         }
 
         return true;
@@ -385,18 +409,7 @@ class CloudStorageController extends Controller
 
     public function recover($files)
     {
-        foreach ($files as $file) {
-            $bool = File::where([
-                'username' => $this->user->name,
-                'status' => 0,
-                'basename' => $file,
-            ])->update(['status' => 1]);
 
-            if (!$bool)
-                return false;
-        }
-
-        return true;
     }
 
 }
