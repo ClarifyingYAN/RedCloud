@@ -9,6 +9,8 @@ use Illuminate\Http\Request;
 use App\Models\File;
 use App\Http\Requests;
 use App\Events\FileCreate;
+use App\Events\FileDownload;
+use App\Events\FileUpload;
 
 class CloudStorageController extends Controller
 {
@@ -462,5 +464,19 @@ class CloudStorageController extends Controller
 //    {
 //
 //    }
+
+    public function upload($info)
+    {
+        $newFile = new File();
+        $newFile->filename = $info[''];
+    }
+
+    public function download($info)
+    {
+        if ($this->user!=$info['user'])
+            return false;
+
+        return event(new FileDownload($info['file']));
+    }
 
 }
