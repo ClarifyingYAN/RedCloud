@@ -10,23 +10,22 @@ class FileUpload extends Event
 {
     use SerializesModels;
 
+    public $filename;
+
+    public $tmp;
+
+    public $destination;
+
     /**
      * Create a new event instance.
      *
      * @return void
      */
-    public function __construct()
+    public function __construct($filename, $tmp, $destination)
     {
-        //
+        $this->filename = $filename;
+        $this->tmp = $tmp;
+        $this->destination = $destination;
     }
 
-    /**
-     * Get the channels the event should be broadcast on.
-     *
-     * @return array
-     */
-    public function broadcastOn()
-    {
-        return [];
-    }
 }

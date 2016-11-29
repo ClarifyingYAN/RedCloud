@@ -178,6 +178,19 @@ class FileController extends Controller
         return response()->download($path);
     }
 
+    public function upload($filename, $tmp_path, $up_path)
+    {
+        if (file_exists($up_path.$filename))
+            return false;
+        else
+        {
+            move_uploaded_file($tmp_path,$up_path.$filename);
+            return true;
+        }
+
+
+    }
+
     /**
      * Get files.
      *

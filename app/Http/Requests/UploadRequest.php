@@ -25,6 +25,7 @@ class UploadRequest extends Request
     {
         return [
             'uploadFile' => 'required|JSON',
+            'up_path' => 'required|string',
             //
         ];
     }

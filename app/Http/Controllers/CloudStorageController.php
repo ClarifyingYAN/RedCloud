@@ -468,7 +468,24 @@ class CloudStorageController extends Controller
     public function upload($info)
     {
         $newFile = new File();
-        $newFile->filename = $info[''];
+        $newFile->filename = $info['filename'];
+        $newFile->type = $info['type'];
+        $newFile->pid = $this->user->uid;
+        $newFile->size = $info['size'];
+        $newFile->username = $this->user->name;
+        $newFile->status = 1;
+        $newFile->path = $info['up_path'];
+
+
+
+        if (!$newFile->save())
+            return false;
+
+        $result = event(new FileUpload($info['filename'],['tmp_path'], $info['up_path']));
+        if ($result)
+            return true;
+
+        return false;
     }
 
     public function download($info)
