@@ -448,7 +448,7 @@ class CloudStorageController extends Controller
     /**
      * get recycle
      * 
-     * @return \Illuminate\Database\Eloquent\Collection|static[]
+     * @return bool
      */
 //    public function getRecycleBin()
 //    {
@@ -465,23 +465,30 @@ class CloudStorageController extends Controller
 //
 //    }
 
-    public function upload($info)
+    public function upload($request)
     {
-        $newFile = new File();
-        $newFile->filename = $info['filename'];
-        $newFile->type = $info['type'];
-        $newFile->pid = $this->user->uid;
-        $newFile->size = $info['size'];
-        $newFile->username = $this->user->name;
-        $newFile->status = 1;
-        $newFile->path = $info['up_path'];
+        $up_path = $request->up_path;
+        $file = $request->file('files');
+
+        if ($file->isValid()) {
+
+            $newFile = new File();
+            $newFile->filename = $file->getClientOriginalName();
+            $newFile->type = $file->getClientMimeType();
+            $newFile->pid = $this->user->uid;
+            $newFile->size = $file->getClientSize();
+            $newFile->username = $this->user->name;
+            $newFile->status = 1;
+            $newFile->path = $up_path;
+
+        }
 
 
 
         if (!$newFile->save())
             return false;
 
-        $result = event(new FileUpload($info['filename'],['tmp_path'], $info['up_path']));
+        $result = event(new FileUpload($file->getClientOriginalName(),$file->getRealPath(), $up_path));
         if ($result)
             return true;
 

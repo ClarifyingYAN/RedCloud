@@ -25,7 +25,7 @@ class DownloadRequest extends Request
     {
         return [
             'downloadFiles' => 'required|JSON',
-            //
+            //   {/user/root/a.txt}
         ];
     }
 }

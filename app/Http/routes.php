@@ -15,6 +15,10 @@ Route::get('/', function () {
     return view('welcome');
 });
 
+Route::get('/up', function () {
+   return view('upload');
+});
+
 Route::auth();
 
 // api route group
@@ -30,7 +34,7 @@ Route::group(['middleware' => ['jwt.auth', 'jwt.refresh'], 'prefix' => 'api'], f
 //    Route::get('/recycle', 'ApiController@getRecycle');
 //    Route::match(['put', 'patch'], '/file/recover', 'ApiController@recover');
     Route::post('/file/upload','ApiController@upload');
-    Route::get('/file/dowload','ApiController@download');
+    Route::get('/file/download','ApiController@download');
 });
 
 

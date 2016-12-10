@@ -133,25 +133,11 @@ class ApiController extends Controller
 
     public function upload(Requests\UploadRequest $request)
     {
-        $file = $request->file('files');
 
-        if ($file->isValid())
-        {
-            $fileinfo=[
-                'filename'=>$file->getClientOriginalName(),
-                'type'=>$file->getClientMimeType(),
-                'size'=>$file->getClientSize(),
-                'tmp_path'=>$file->getRealPath(),
-                'up_path'=>$request->up_path,
-            ];
-
-            if (!$this->cloud->upload($fileinfo))
-                return response()->json(['error' => 'file can not be empty']);
+            if (!$this->cloud->upload($request))
+                return response()->json(['error' => 'file upload failed']);
 
             return response()->json(['status' => '200']);
-        }
-
-        return  ;
 
 
     }

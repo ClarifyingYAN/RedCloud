@@ -24,7 +24,7 @@ class UploadRequest extends Request
     public function rules()
     {
         return [
-            'uploadFile' => 'required|JSON',
+          //  'uploadFile' => 'required|JSON',
             'up_path' => 'required|string',
             //
         ];

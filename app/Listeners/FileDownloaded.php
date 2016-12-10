@@ -7,7 +7,7 @@ use App\Http\Controllers\FileController;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Contracts\Queue\ShouldQueue;
 
-class FileDownload
+class FileDownloaded
 {
     /**
      * Create the event listener.

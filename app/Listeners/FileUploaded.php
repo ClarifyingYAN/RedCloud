@@ -27,7 +27,7 @@ class FileUploaded
      */
     public function handle(FileUpload $event)
     {
-        $this->upload($event->filename, $event->tmp, $event->destination)
+        $this->upload($event->filename, $event->tmp, $event->destination);
     }
 
     public function upload($filename, $tmp, $destination)

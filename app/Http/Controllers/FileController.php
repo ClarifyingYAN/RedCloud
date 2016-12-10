@@ -180,7 +180,7 @@ class FileController extends Controller
 
     public function upload($filename, $tmp_path, $up_path)
     {
-        if (file_exists($up_path.$filename))
+        if (file_exists($up_path.'/'.$filename))
             return false;
         else
         {

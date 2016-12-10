@@ -26,7 +26,7 @@ class EventServiceProvider extends ServiceProvider
             'App\Listeners\FileUploaded',
         ],
         'App\Events\FileDownload' => [
-            'App\Listeners\FileDownload',
+            'App\Listeners\FileDownloaded',
         ]
     ];
 
