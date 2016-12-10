@@ -131,6 +131,27 @@ class ApiController extends Controller
         return response()->json(['status' => '200']);
     }
 
+    public function upload(Requests\UploadRequest $request)
+    {
+
+            if (!$this->cloud->upload($request))
+                return response()->json(['error' => 'file upload failed']);
+
+            return response()->json(['status' => '200']);
+
+
+    }
+
+    public function download(Requests\DownloadRequest $request)
+    {
+        $files = json_decode($request->downloadFiles);
+
+        if (!$this->cloud->download($files))
+            return response()->json(['error' => 'file download failed']);
+
+        return response()->json(['status' => '200']);
+    }
+
 //    public function delete(Requests\SoftDeleteRequest $request)
 //    {
 //        $files = json_decode($request->deletedFiles);

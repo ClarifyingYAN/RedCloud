@@ -9,6 +9,8 @@ use Illuminate\Http\Request;
 use App\Models\File;
 use App\Http\Requests;
 use App\Events\FileCreate;
+use App\Events\FileDownload;
+use App\Events\FileUpload;
 
 class CloudStorageController extends Controller
 {
@@ -446,7 +448,7 @@ class CloudStorageController extends Controller
     /**
      * get recycle
      * 
-     * @return \Illuminate\Database\Eloquent\Collection|static[]
+     * @return bool
      */
 //    public function getRecycleBin()
 //    {
@@ -462,5 +464,43 @@ class CloudStorageController extends Controller
 //    {
 //
 //    }
+
+    public function upload($request)
+    {
+        $up_path = $request->up_path;
+        $file = $request->file('files');
+
+        if ($file->isValid()) {
+
+            $newFile = new File();
+            $newFile->filename = $file->getClientOriginalName();
+            $newFile->type = $file->getClientMimeType();
+            $newFile->pid = $this->user->uid;
+            $newFile->size = $file->getClientSize();
+            $newFile->username = $this->user->name;
+            $newFile->status = 1;
+            $newFile->path = $up_path;
+
+        }
+
+
+
+        if (!$newFile->save())
+            return false;
+
+        $result = event(new FileUpload($file->getClientOriginalName(),$file->getRealPath(), $up_path));
+        if ($result)
+            return true;
+
+        return false;
+    }
+
+    public function download($info)
+    {
+        if ($this->user!=$info['user'])
+            return false;
+
+        return event(new FileDownload($info['file']));
+    }
 
 }

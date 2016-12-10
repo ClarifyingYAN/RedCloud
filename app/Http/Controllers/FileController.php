@@ -13,6 +13,8 @@ class FileController extends Controller
      */
     protected $rootPath;
 
+    protected $user;
+
     /**
      * Set root path.
      * 
@@ -167,6 +169,26 @@ class FileController extends Controller
             return $this->deleteDirectory($file);
         else
             return $this->deleteFile($file);
+    }
+
+    public function download($file)
+    {
+        $path = $this->getRealPath($file);
+
+        return response()->download($path);
+    }
+
+    public function upload($filename, $tmp_path, $up_path)
+    {
+        if (file_exists($up_path.'/'.$filename))
+            return false;
+        else
+        {
+            move_uploaded_file($tmp_path,$up_path.$filename);
+            return true;
+        }
+
+
     }
 
     /**
